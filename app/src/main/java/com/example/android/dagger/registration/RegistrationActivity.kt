@@ -19,21 +19,31 @@ package com.example.android.dagger.registration
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.example.android.dagger.MyApplication
 import com.example.android.dagger.R
+import com.example.android.dagger.di.registration.RegistrationComponent
 import com.example.android.dagger.main.MainActivity
 import com.example.android.dagger.registration.enterdetails.EnterDetailsFragment
 import com.example.android.dagger.registration.termsandconditions.TermsAndConditionsFragment
+import javax.inject.Inject
 
 class RegistrationActivity : AppCompatActivity() {
 
-    lateinit var registrationViewModel: RegistrationViewModel
+
+    private lateinit var registrationViewModel: RegistrationViewModel
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+    lateinit var registrationComponent: RegistrationComponent
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        registrationComponent = (application as MyApplication).appComponent.registrationComponent().create()
+        registrationComponent.inject(this)
         super.onCreate(savedInstanceState)
+        registrationViewModel = ViewModelProvider(this, viewModelFactory)[RegistrationViewModel::class.java]
         setContentView(R.layout.activity_registration)
 
-        registrationViewModel = RegistrationViewModel((application as MyApplication).userManager)
         supportFragmentManager.beginTransaction()
             .add(R.id.fragment_holder, EnterDetailsFragment())
             .commit()

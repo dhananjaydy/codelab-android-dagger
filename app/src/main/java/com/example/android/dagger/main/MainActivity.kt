@@ -21,15 +21,20 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.example.android.dagger.MyApplication
 import com.example.android.dagger.R
 import com.example.android.dagger.login.LoginActivity
 import com.example.android.dagger.registration.RegistrationActivity
 import com.example.android.dagger.settings.SettingsActivity
+import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mainViewModel: MainViewModel
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+
 
     /**
      * If the User is not registered, RegistrationActivity will be launched,
@@ -39,19 +44,30 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val userManager = (application as MyApplication).userManager
+        val userManager = (application as MyApplication).appComponent.userManager()
+        userManager.userComponent!!.inject(this)
+        mainViewModel = ViewModelProvider(
+            this,
+            viewModelFactory
+        )[MainViewModel::class.java]
+
         if (!userManager.isUserLoggedIn()) {
             if (!userManager.isUserRegistered()) {
-                startActivity(Intent(this, RegistrationActivity::class.java))
+                startActivity(Intent(
+                    this,
+                    RegistrationActivity::class.java
+                ))
                 finish()
             } else {
-                startActivity(Intent(this, LoginActivity::class.java))
+                startActivity(Intent(
+                    this,
+                    LoginActivity::class.java
+                ))
                 finish()
             }
         } else {
             setContentView(R.layout.activity_main)
-
-            mainViewModel = MainViewModel(userManager.userDataRepository!!)
+            userManager.userComponent!!.inject(this)
             setupViews()
         }
     }
@@ -67,7 +83,10 @@ class MainActivity : AppCompatActivity() {
     private fun setupViews() {
         findViewById<TextView>(R.id.hello).text = mainViewModel.welcomeText
         findViewById<Button>(R.id.settings).setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
+            startActivity(Intent(
+                this,
+                SettingsActivity::class.java
+            ))
         }
     }
 }
